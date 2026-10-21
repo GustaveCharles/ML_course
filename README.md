@@ -16,3 +16,46 @@ python3 run.py
 ```
 
 The validation command creates `validation_results.json`. The second command fits the final model on all labeled rows and writes `submission.csv` with the original test IDs. Neither command uploads to AIcrowd. Only the course dataset and NumPy are used for training.
+
+## Validation and features
+
+The stratified outer split uses NumPy seed 433: 262,508 training rows and
+65,627 held-out rows. An inner 80/20 split of the outer training rows, seed
+619, gives 210,006 fit and 52,502 development rows. Feature sets, the L2
+coefficient, and the number of updates were compared on development rows.
+The final comparison against the original classifier and ridge regression
+uses the outer holdout. This is one development split and one holdout, not
+cross-validation. All imputation and standardization statistics are fitted
+only on the corresponding fit rows. Each classification threshold maximizes
+F1 on fit rows, without reading development or holdout labels.
+
+The selected model is regularized logistic regression with L2 coefficient
+0.0001, 900 full-batch updates, and step size 0.5. Its 156-column design
+matrix includes the intercept. `run.py` refits it and its threshold on all
+labeled rows before predicting the test rows. `--validate` reproduces the
+feature and parameter comparisons in `validation_results.json`.
+The revised submission received F1 0.438 and AUC 0.880 on AIcrowd; model
+selection used the local development set, not these competition scores.
+
+Numeric inputs are age, BMI, physical and mental unhealthy days, and days when
+poor health limited usual activities. BRFSS code 88 means zero days for the
+three day-count variables; other invalid or absent values use the
+training median and a missing-value flag. Categorical variables use one-hot
+encoding for explicitly listed valid values; unknown and unanswered values
+yield all-zero indicators. The nested feature groups are:
+
+| Group | Input columns |
+| --- | --- |
+| Demographic | `_AGE80`, `SEX` |
+| Clinical | `_BMI5`, `PHYSHLTH`, `MENTHLTH`, `GENHLTH`, `BPHIGH4`, `TOLDHI2`, `CVDSTRK3`, `CHCKIDNY`, `DIABETE3`, `DIFFWALK` |
+| Lifestyle and socioeconomic | `_SMOKER3`, `EXERANY2`, `INCOME2`, `EDUCA`, `HLTHPLN1`, `CHECKUP1` |
+| Additional health and context | `POORHLTH`, `PERSDOC2`, `MEDCOST`, `BLOODCHO`, `ASTHMA3`, `CHCOCNCR`, `CHCCOPD1`, `HAVARTH3`, `ADDEPEV2`, `MARITAL`, `EMPLOY1`, `RENTHOM1`, `VETERAN3`, `BLIND`, `DECIDE`, `DIFFDRES`, `DIFFALON`, `_PACAT1` |
+| Extended core | `BPMEDS`, `CHCSCNCR`, `ASTHNOW`, `QLACTLM2`, `USEEQUIP`, `INTERNET`, `SMOKE100`, `USENOW3`, `FLUSHOT6`, `PNEUVAC3`, `_CHLDCNT`, `_AGEG5YR` |
+
+The selected model adds eight simple nonlinear terms: age squared, BMI
+squared, age times BMI, and age interactions with sex, blood pressure,
+cholesterol, diabetes, and smoking. These follow the polynomial feature idea
+from Lab 3. Each term is standardized using fit rows only. `model.py`
+specifies the valid codes and numeric ranges for every field. The ID column
+is never used as a feature.
+
