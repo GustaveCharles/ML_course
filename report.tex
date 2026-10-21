@@ -1,0 +1,91 @@
+\documentclass[10pt,conference,compsocconf]{latex-example-paper/IEEEtran}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{float}
+\usepackage{graphicx}
+
+\begin{document}
+\title{Which Survey Answers Help Identify Reported Heart Disease?}
+\author{Gustave Charles}
+\maketitle
+
+\begin{abstract}
+We predict whether a survey respondent reports a previous coronary heart disease diagnosis. The condition is uncommon, so a model can look accurate while missing nearly everyone affected. We compare simple models and test which extra survey answers help. Broader health and activity information, plus a few age-dependent terms, gives a modest improvement over our first model on local validation. These predictions describe reported existing disease, not future heart-attack risk.
+\end{abstract}
+
+\section{Question and data}
+The supplied BRFSS data contain 328,135 labeled respondents and 109,379 rows for prediction. The label is positive for a reported history of coronary heart disease, heart attack, or angina. Only 8.8\% of labeled rows are positive. A rule that always says ``no'' is therefore 91.2\% accurate but finds no positive cases. We focus on positive-class F1, which balances missed cases and false alarms, and area under the ROC curve (AUC), which measures how well a score ranks positive cases ahead of negative ones. We use the course data only; survey response codes follow the BRFSS codebook \cite{cdc}.
+
+\section{How we built and checked the model}
+\subsection{Why these models?}
+We began with regularized logistic regression because the target has two classes and the model gives a score that can be turned into a probability. Its L2 penalty reduces unstable weights when survey answers overlap. We compared it with ridge regression on the \emph{same} inputs: ridge is a simple course baseline, but its squared-error loss was designed for continuous outcomes rather than binary answers. Keeping the inputs fixed makes the comparison about the model, rather than the available information.
+
+Our first feature set used age, sex, BMI, general health, several diagnosed conditions, and lifestyle responses. We then added health-care access, other health conditions, limits in daily activities, and more activity and social responses. These are plausible indicators of health, but their value is determined by the data comparison below. Finally, we added eight simple terms: age and BMI squared, their product, and age multiplied by indicators for sex, blood pressure, cholesterol, diabetes, and smoking. These let a straight-line model represent curved age trends and age-dependent associations. They follow the polynomial-feature idea used in the course labs. Respondent IDs and survey administration fields are excluded.
+
+\subsection{Cleaning and evaluation}
+For the three day-count questions, code 88 means zero days. Missing or invalid numeric answers get the median from the fitting rows plus a missing-value indicator. Valid categories become indicator columns; unanswered categories are all zero for that question. Numeric scaling is also learned from fitting rows only. The final model has 156 columns including the intercept.
+
+We first set aside 20\% of labeled rows with stratified seed 433. From the remaining rows, a second stratified 80/20 split (seed 619) supplied fitting and development parts. We compared feature sets, L2 strengths, and training lengths on the development part. For each fitted model, the classification cutoff was chosen to maximize F1 on its \emph{fitting} rows; development and held-out labels did not choose cutoffs. We then refit the selected settings on the full outer training part and checked the outer holdout. No competition test labels were used.
+
+\section{What the comparisons showed}
+Table~\ref{tab:steps} shows the main development comparisons. The extra health and context answers mattered more than the curved terms alone. Longer fitting also helped, so stopping after 300 updates had left some improvement unused. We tested logistic L2 strengths $10^{-5}$, $10^{-4}$, and $10^{-3}$; their development F1 scores were close, and $10^{-4}$ was slightly best. The selected model uses 900 full-batch updates with step size 0.5.
+
+\begin{table}[H]
+\centering
+\caption{Development F1 for the main feature and fitting choices.}
+\label{tab:steps}
+\begin{tabular}{lr}
+\toprule
+Logistic model & F1 \\
+\midrule
+Original survey answers & .409 \\
+Original + curved terms & .411 \\
+Original + health/context & .418 \\
+All answers + curved terms & .419 \\
+Same inputs, longer fitting & .423 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On the outer holdout (Table~\ref{tab:holdout}), the selected logistic model improves F1 from .416 to .428 and AUC from .853 to .862 over our first model. Ridge uses exactly the selected model's 156 inputs; its L2 strength was chosen on development rows from $0.001$, $0.01$, and $0.1$. Logistic regression does a little better on both measures. This is measured support for our choice, though the difference is small.
+
+\begin{table}[H]
+\centering
+\caption{Held-out results; F1 refers to the positive class.}
+\label{tab:holdout}
+\begin{tabular}{lrrr}
+\toprule
+Model & F1 & AUC & Accuracy \\
+\midrule
+Always ``no'' & .000 & .500 & .912 \\
+Original logistic & .416 & .853 & .865 \\
+Ridge, same new inputs & .424 & .857 & .871 \\
+Selected logistic & \textbf{.428} & \textbf{.862} & .867 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cutoff matters as much as the model's ranking. Using the usual probability cutoff of 0.5, the selected model finds only 14\% of positive respondents. The training-F1 cutoff finds 56\%, while also making more false alarms. Which balance is desirable depends on the real cost of missed cases and false alarms; the competition's F1 score is only one choice.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{figures/precision_recall.pdf}
+\caption{Held-out precision and recall move in opposite directions as the cutoff changes. The two marks show the tested operating points.}
+\label{fig:pr}
+\end{figure}
+
+\newpage
+\section{Limits and reproducibility}
+The largest gain came from asking about more aspects of health, rather than from the curved terms alone. Many answers overlap: age, general health, and mobility already carry much of the signal. The improvement is useful but small. At the chosen cutoff, about two in three alerts are false positives, even though it finds more than half of respondents with a positive label.
+
+Performance also varies by age: the model finds about 20\% of positive respondents younger than 50, compared with 64\% among those aged at least 65. Pooled F1 hides this difference. Some current health answers may reflect the effects of a previous diagnosis. The outcome is a past, self-reported condition, so this model should not be read as a prediction of future disease or a clinical decision tool.
+
+We used one development split and one fixed holdout, not cross-validation. The holdout had already been inspected for the first model, so its revised score may be somewhat optimistic. The revised submission scored F1 .438 and AUC .880 on AIcrowd. This agrees with the local improvement, but we did not use the competition score to choose the model or cutoff.
+
+The accompanying NumPy-only code reproduces the development comparisons and held-out results with \texttt{python3 run.py --validate}. Running \texttt{python3 run.py} refits the selected model on all labeled rows and writes test predictions with the original IDs.
+
+\begin{thebibliography}{1}
+\bibitem{cdc} CDC, ``2015 BRFSS Codebook,'' \url{https://www.cdc.gov/brfss/annual_data/2015/pdf/codebook15_llcp.pdf}.
+\end{thebibliography}
+\end{document}

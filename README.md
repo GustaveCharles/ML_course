@@ -1,6 +1,6 @@
 # CS-433 Project 1 — heart disease survey classification
 
-A NumPy-only binary classifier for the course's BRFSS survey dataset. The six required regression methods are in `implementations.py`. `model.py` prepares the survey answers and evaluates predictions; `run.py` trains the chosen model and writes `submission.csv`.
+A NumPy-only binary classifier for the course's BRFSS survey dataset. The six required regression methods are in `implementations.py`. `model.py` prepares the survey answers and evaluates predictions; `run.py` trains the chosen model and writes `submission.csv`. The two-page report is in `report.pdf` with its LaTeX source in `report.tex`.
 
 ## Data and requirements
 
@@ -12,10 +12,11 @@ From the repository root:
 
 ```sh
 python3 run.py --validate
+python3 plot_results.py
 python3 run.py
 ```
 
-The validation command creates `validation_results.json`. The second command fits the final model on all labeled rows and writes `submission.csv` with the original test IDs. Neither command uploads to AIcrowd. Only the course dataset and NumPy are used for training.
+The first command creates `validation_results.json`; the second regenerates the report figure and needs Matplotlib only for plotting. The last command fits the final model on all labeled rows and writes `submission.csv` with the original test IDs. Neither command uploads to AIcrowd. Only the course dataset and NumPy are used for training.
 
 ## Validation and features
 
@@ -59,3 +60,6 @@ from Lab 3. Each term is standardized using fit rows only. `model.py`
 specifies the valid codes and numeric ranges for every field. The ID column
 is never used as a feature.
 
+The committed `submission.csv` has SHA-256 `48f5d0601c40848c6cad3edc391fe55794426fdc5a7dc2ed33e7928a5a7b5e50`; a fresh `python3 run.py` with the supplied dataset produced the same bytes.
+
+The report source uses the included `latex-example-paper/IEEEtran.cls`. To rebuild the PDF from the repository root, run `pdflatex report.tex` twice. The public grading tests expect a URL ending in `/tree/<commit SHA>` so the exact submitted revision is fixed.
