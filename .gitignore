@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.aux
+*.log
+*.out
+*.synctex.gz
+data/dataset/
