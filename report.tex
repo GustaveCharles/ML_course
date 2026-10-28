@@ -11,7 +11,7 @@
 \maketitle
 
 \begin{abstract}
-We predict whether a survey respondent reports a previous coronary heart disease diagnosis using the BRFSS dataset. Because only 8.8\% of respondents have a positive label, standard classification accuracy is misleading. Using pure NumPy implementations, we compare regularized logistic regression and ridge regression. We test the impact of feature selection, simple interaction terms, and decision threshold tuning. Adding questions on daily activity limitations and healthcare access improved validation F1 from 0.409 to 0.423. On our held-out test split, the selected logistic model achieves an F1 score of 0.428 and an AUC of 0.862.
+We predict whether a survey respondent reports a previous coronary heart disease diagnosis using the BRFSS dataset. Because only 8.8\% of respondents have a positive label, standard classification accuracy is misleading. Using pure NumPy implementations, we compare regularized logistic regression and ridge regression. We test the impact of feature selection, simple interaction terms, and decision threshold tuning. Adding questions on daily activity limitations and healthcare access, together with longer training, improved validation F1 from 0.409 to 0.423. On our held-out test split, the selected logistic model achieves an F1 score of 0.428 and an AUC of 0.862.
 \end{abstract}
 
 \section{Introduction and data}
@@ -73,6 +73,8 @@ Selected logistic & \textbf{.428} & \textbf{.862} & .867 \\
 \end{tabular}
 \end{table}
 
+For ridge regression, we selected the L2 strength on the development set from $0.001$, $0.01$, and $0.1$. It used the same 156 inputs as the selected logistic model, so the small holdout difference compares the learning objectives rather than different information.
+
 The classification threshold has a significant impact on practical utility. With the standard 0.5 probability cutoff, the model detects only 14\% of respondents with heart disease. Selecting the cutoff that maximizes training F1 increases recall to 56\%, at the cost of more false positives (Figure~\ref{fig:pr}).
 
 \begin{figure}[H]
@@ -86,9 +88,9 @@ The classification threshold has a significant impact on practical utility. With
 \section{Discussion and limitations}
 The experimental comparisons show that questions reflecting mobility limitations and general health provide the largest predictive gains, whereas non-linear terms provide only modest improvements. Many survey answers carry overlapping signal, with age, general health, and mobility capturing most of the predictive pattern.
 
-Several limitations should be noted. At the F1-optimized threshold, roughly two out of three positive alerts are false alarms, even though the model detects more than half of the true positive cases. Furthermore, sensitivity varies substantially across age groups: the model identifies 64\% of positive respondents aged 65 and older, but only 20\% of positive respondents under 50. In addition, the target variable reflects a past, self-reported diagnosis rather than prospective risk of a future event; the model should therefore not be interpreted as a clinical diagnostic tool. Finally, our local model selection relied on a single train/development split and one holdout set rather than repeated cross-validation.
+Several limitations should be noted. At the F1-optimized threshold, roughly two out of three positive alerts are false alarms, even though the model detects more than half of the true positive cases. Furthermore, sensitivity varies substantially across age groups: the model identifies 64\% of positive respondents aged 65 and older, but only 20\% of positive respondents under 50. In addition, the target variable reflects a past, self-reported diagnosis rather than prospective risk of a future event; the model should therefore not be interpreted as a clinical diagnostic tool. Finally, our local model selection relied on a single train/development split and one holdout set rather than repeated cross-validation. The holdout had already been inspected for an earlier model, so the revised holdout result may be somewhat optimistic.
 
-On AIcrowd, our final submission obtained an F1 score of 0.438 and an AUC of 0.880. All validation tables can be reproduced with \texttt{python3 run.py --validate}, and final test predictions are generated via \texttt{python3 run.py}.
+On AIcrowd, our final submission obtained an F1 score of 0.438 and an AUC of 0.880. We did not use the competition score to choose the model or threshold. All validation tables can be reproduced with \texttt{python3 run.py --validate}, and final test predictions are generated via \texttt{python3 run.py}.
 
 \begin{thebibliography}{1}
 \bibitem{cdc} Centers for Disease Control and Prevention, ``2015 BRFSS Codebook,'' \url{https://www.cdc.gov/brfss/annual_data/2015/pdf/codebook15_llcp.pdf}.
