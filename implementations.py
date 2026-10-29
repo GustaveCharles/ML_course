@@ -1,6 +1,6 @@
-"""Project 1 methods, adapted from the course Lab 2, 4, and 5 corrections.
+"""Methods adapted from the course Lab 2, 4, and 5.
 
-The public interface uses one-dimensional target and weight arrays. Each loss is
+Public interface uses one-dimensional target and weight arrays. Each loss is
 the unpenalized, mean per-example loss evaluated at the returned weights.
 """
 
@@ -18,7 +18,7 @@ def _sigmoid(z):
 
 
 def _logistic_loss(y, tx, w):
-    """Lab 5 negative log likelihood in a numerically stable form."""
+    """Lab 5 negative log likelihood, using logaddexp to avoid overflow."""
     z = tx @ w
     return np.mean(np.logaddexp(0.0, z) - y * z)
 
@@ -44,13 +44,13 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
 
 
 def least_squares(y, tx):
-    """Solve the unregularized normal equations (Lab 4)."""
+    """Unregularized normal equations (Lab 4)."""
     w = np.linalg.solve(tx.T @ tx, tx.T @ y)
     return w, _mse(y, tx, w)
 
 
 def ridge_regression(y, tx, lambda_):
-    """Solve the Lab 4 ridge normal equations; return unpenalized MSE."""
+    """Lab 4 ridge normal equations. return unpenalized MSE."""
     n, d = tx.shape
     w = np.linalg.solve(tx.T @ tx + 2 * n * lambda_ * np.eye(d), tx.T @ y)
     return w, _mse(y, tx, w)
@@ -66,7 +66,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
-    """Fit Lab 5 L2 logistic regression; omit penalty from returned loss."""
+    """Lab 5 L2 logistic regression."""
     w = np.array(initial_w, dtype=float, copy=True)
     for _ in range(max_iters):
         gradient = tx.T @ (_sigmoid(tx @ w) - y) / len(y) + 2 * lambda_ * w

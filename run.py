@@ -1,4 +1,4 @@
-"""Reproduce Project 1 validation results or the AIcrowd submission CSV."""
+"""Reproduce Project 1 validation results"""
 
 import argparse
 import json
@@ -31,7 +31,6 @@ FINAL_ITERATIONS = 900
 
 
 def ensure_data():
-    """Use the supplied CSVs, extracting the course archive when needed."""
     if not (DATA / "x_train.csv").exists():
         if not ARCHIVE.exists():
             raise FileNotFoundError(
