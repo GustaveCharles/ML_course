@@ -8,7 +8,6 @@ import os
 def load_csv_data(data_path, sub_sample=False):
     """
     This function loads the data and returns the respectinve numpy arrays.
-    Remember to put the 3 files in the same folder and to not change the names of the files.
 
     Args:
         data_path (str): datafolder path
@@ -51,9 +50,7 @@ def load_csv_data(data_path, sub_sample=False):
 
 def create_csv_submission(ids, y_pred, name):
     """
-    This function creates a csv file named 'name' in the format required for a submission in Kaggle or AIcrowd.
-    The file will contain two columns the first with 'ids' and the second with 'y_pred'.
-    y_pred must be a list or np.array of 1 and -1 otherwise the function will raise a ValueError.
+    Creates an output file in csv format for submission to kaggle or AIcrowd.
 
     Args:
         ids (list,np.array): indices

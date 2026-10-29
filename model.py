@@ -227,7 +227,7 @@ def fit_logistic(y, tx, lambda_=0.0001, iterations=300, gamma=0.5):
 
 
 def predict_scores(tx, w):
-    """Return logistic scores; ranking is equivalent to sigmoid probability."""
+    """Return logistic scores."""
     return tx @ w
 
 
